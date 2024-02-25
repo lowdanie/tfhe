@@ -31,12 +31,6 @@ class GswEncryptionKey:
     key: polynomial.Polynomial
 
 
-@dataclasses.dataclass
-class BootstrapKey:
-    config: GswConfig
-    gsw_ciphertexts: list[GswCiphertext]
-
-
 def base_p_num_powers(log_p):
     return 32 // log_p
 
@@ -72,6 +66,20 @@ def polynomial_to_base_p(
         polynomial.Polynomial(coeff=v, N=f.N)
         for v in array_to_base_p(f.coeff, log_p=log_p)
     ]
+
+
+def base_p_to_polynomial(
+    f_base_p: Sequence[polynomial.Polynomial], log_p: int
+) -> polynomial.Polynomial:
+    f = polynomial.zero_polynomial(f_base_p[0].N)
+
+    for i, level in enumerate(f_base_p):
+        p_i = 2 ** (i * log_p)
+        f = polynomial.polynomial_add(
+            f, polynomial.polynomial_constant_multiply(p_i, level)
+        )
+
+    return f
 
 
 def convert_lwe_key_to_gsw(
@@ -166,3 +174,17 @@ def gsw_multiply(
         )
 
     return rlwe_ciphertext
+
+
+def cmux(
+    gsw_ciphertext: GswCiphertext,
+    rlwe_ciphertext_0: rlwe.RlweCiphertext,
+    rlwe_ciphertext_1: rlwe.RlweCiphertext,
+) -> rlwe.RlweCiphertext:
+    return rlwe.rlwe_add(
+        gsw_multiply(
+            gsw_ciphertext,
+            rlwe.rlwe_subtract(rlwe_ciphertext_1, rlwe_ciphertext_0),
+        ),
+        rlwe_ciphertext_0,
+    )
