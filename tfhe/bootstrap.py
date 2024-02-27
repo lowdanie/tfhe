@@ -63,7 +63,6 @@ def blind_rotate(
     return rotated_rlwe_ciphertext
 
 
-# TODO - just need extract constant?
 def extract_sample(
     i: int, rlwe_ciphertext: rlwe.RlweCiphertext
 ) -> lwe.LweCiphertext:
@@ -96,12 +95,8 @@ def bootstrap(
     test_polynomial = polynomial.polynomial_constant_multiply(
         scale // 2, _build_test_polynomial(N)
     )
-
-    # TODO: make trivial_encryption method?
-    test_rlwe_ciphertext = rlwe.RlweCiphertext(
-        config=bootstrap_key.config.rlwe_config,
-        a=polynomial.zero_polynomial(N),
-        b=test_polynomial,
+    test_rlwe_ciphertext = rlwe.rlwe_trivial_ciphertext(
+        test_polynomial, bootstrap_key.config.rlwe_config
     )
 
     rotated_rlwe_ciphertext = blind_rotate(

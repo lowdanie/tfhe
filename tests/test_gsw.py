@@ -63,7 +63,7 @@ class TestGsw(unittest.TestCase):
         g = polynomial.build_monomial(c=1, i=1, N=rlwe_config.degree)
 
         gsw_plaintext = gsw.GswPlaintext(config=gsw_config, message=f)
-        rlwe_plaintext = rlwe.encode_rlwe(g, rlwe_config)
+        rlwe_plaintext = rlwe.rlwe_encode(g, rlwe_config)
 
         gsw_ciphertext = gsw.gsw_encrypt(gsw_plaintext, gsw_key)
         rlwe_ciphertext = rlwe.rlwe_encrypt(rlwe_plaintext, rlwe_key)
@@ -72,7 +72,7 @@ class TestGsw(unittest.TestCase):
 
         fg = polynomial.build_monomial(c=2, i=1, N=rlwe_config.degree)
         self.assert_polynomial_equal(
-            rlwe.decode_rlwe(rlwe.rlwe_decrypt(rlwe_ciphertext_prod, rlwe_key)),
+            rlwe.rlwe_decode(rlwe.rlwe_decrypt(rlwe_ciphertext_prod, rlwe_key)),
             fg,
         )
 
@@ -91,8 +91,8 @@ class TestGsw(unittest.TestCase):
         selector_plaintext = gsw.GswPlaintext(
             config=gsw_config, message=selector
         )
-        line_0_plaintext = rlwe.encode_rlwe(line_0, rlwe_config)
-        line_1_plaintext = rlwe.encode_rlwe(line_1, rlwe_config)
+        line_0_plaintext = rlwe.rlwe_encode(line_0, rlwe_config)
+        line_1_plaintext = rlwe.rlwe_encode(line_1, rlwe_config)
 
         selector_ciphertext = gsw.gsw_encrypt(selector_plaintext, gsw_key)
         line_0_ciphertext = rlwe.rlwe_encrypt(line_0_plaintext, rlwe_key)
@@ -103,7 +103,7 @@ class TestGsw(unittest.TestCase):
         )
 
         self.assert_polynomial_equal(
-            rlwe.decode_rlwe(rlwe.rlwe_decrypt(cmux_ciphertext, rlwe_key)),
+            rlwe.rlwe_decode(rlwe.rlwe_decrypt(cmux_ciphertext, rlwe_key)),
             line_1,
         )
 

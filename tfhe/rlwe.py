@@ -1,19 +1,15 @@
-import numpy as np
 import dataclasses
 
-from tfhe import lwe
-from tfhe import polynomial
-from tfhe.polynomial import Polynomial
+import numpy as np
 
-# TODO: move to utils
-INT32_MIN = np.iinfo(np.int32).min
-INT32_MAX = np.iinfo(np.int32).max
+from tfhe import lwe, polynomial, utils
+from tfhe.polynomial import Polynomial
 
 
 @dataclasses.dataclass
 class RlweConfig:
-    degree: int
-    noise_std: float
+    degree: int  # Messages will be in the space Z[X]/(x^degree + 1)
+    noise_std: float  # The std of the noise added during encryption.
 
 
 @dataclasses.dataclass
@@ -34,18 +30,16 @@ class RlweCiphertext:
     a: Polynomial
     b: Polynomial
 
-# TODO: rename to rlwe_encode/decode and use util.encode/decode
-def encode_rlwe(p: Polynomial, config: RlweConfig) -> RlwePlaintext:
-    encode_coeff = np.array([lwe.encode(i).message for i in p.coeff])
+
+def rlwe_encode(p: Polynomial, config: RlweConfig) -> RlwePlaintext:
+    encode_coeff = np.array([utils.encode(i) for i in p.coeff])
     return RlwePlaintext(
         config=config, message=polynomial.Polynomial(N=p.N, coeff=encode_coeff)
     )
 
 
-def decode_rlwe(plaintext: RlwePlaintext) -> Polynomial:
-    decode_coeff = np.array(
-        [lwe.decode(lwe.LwePlaintext(i)) for i in plaintext.message.coeff]
-    )
+def rlwe_decode(plaintext: RlwePlaintext) -> Polynomial:
+    decode_coeff = np.array([utils.decode(i) for i in plaintext.message.coeff])
     return Polynomial(N=plaintext.message.N, coeff=decode_coeff)
 
 
@@ -90,20 +84,12 @@ def rlwe_encrypt(
 ) -> RlweCiphertext:
     a = Polynomial(
         N=key.config.degree,
-        coeff=np.random.randint(
-            low=INT32_MIN,
-            high=INT32_MAX + 1,
-            size=key.config.degree,
-            dtype=np.int32,
-        ),
+        coeff=utils.uniform_sample_int32(size=key.config.degree),
     )
     noise = Polynomial(
         N=key.config.degree,
-        coeff=np.int32(
-            INT32_MAX
-            * np.random.normal(
-                loc=0.0, scale=key.config.noise_std, size=key.config.degree
-            )
+        coeff=utils.gaussian_sample_int32(
+            std=key.config.noise_std, size=key.config.degree
         ),
     )
 
@@ -151,4 +137,19 @@ def rlwe_plaintext_multiply(
         ciphertext.config,
         polynomial.polynomial_multiply(c.message, ciphertext.a),
         polynomial.polynomial_multiply(c.message, ciphertext.b),
+    )
+
+
+def rlwe_trivial_ciphertext(
+    f: Polynomial, config: RlweConfig
+) -> RlweCiphertext:
+    if f.N != config.degree:
+        raise ValueError(
+            f"The degree of f ({f.N}) does not match the config degree ({config.degree}) "
+        )
+
+    return RlweCiphertext(
+        config=config,
+        a=polynomial.zero_polynomial(config.degree),
+        b=f,
     )

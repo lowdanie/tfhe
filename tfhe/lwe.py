@@ -1,13 +1,16 @@
-import numpy as np
 import dataclasses
 
-INT32_MIN = np.iinfo(np.int32).min
-INT32_MAX = np.iinfo(np.int32).max
+import numpy as np
+
+from tfhe import utils
 
 
 @dataclasses.dataclass
 class LweConfig:
+    # Size of the LWE encryption key.
     dimension: int
+
+    # Standard deviation of the encryption noise.
     noise_std: float
 
 
@@ -19,24 +22,30 @@ class LwePlaintext:
 @dataclasses.dataclass
 class LweCiphertext:
     config: LweConfig
-    a: np.ndarray
+    a: np.ndarray  # An int32 array of size config.dimension
     b: np.int32
 
 
 @dataclasses.dataclass
 class LweEncryptionKey:
     config: LweConfig
-    key: np.ndarray
+    key: np.ndarray  # An int32 array of size config.dimension
 
 
-# TODO: there should be a utils file with an encode and decode
-# that operates on ints. These should be renamed to lwe_encode and lwe_decode
-def encode(i: int) -> LwePlaintext:
-    return LwePlaintext(np.multiply(i, 1 << 29, dtype=np.int32))
+def lwe_encode(i: int) -> LwePlaintext:
+    return LwePlaintext(utils.encode(i))
 
 
-def decode(plaintext: LwePlaintext) -> int:
-    return int(np.rint(plaintext.message / (1 << 29)))
+def lwe_decode(plaintext: LwePlaintext) -> int:
+    return utils.decode(plaintext.message)
+
+
+def lwe_encode_bool(b: bool) -> LwePlaintext:
+    return LwePlaintext(utils.encode_bool(b))
+
+
+def lwe_decode_bool(plaintext: LwePlaintext) -> bool:
+    return utils.decode_bool(plaintext.message)
 
 
 def generate_lwe_key(config: LweConfig) -> LweEncryptionKey:
@@ -51,15 +60,8 @@ def generate_lwe_key(config: LweConfig) -> LweEncryptionKey:
 def lwe_encrypt(
     plaintext: LwePlaintext, key: LweEncryptionKey
 ) -> LweCiphertext:
-    a = np.random.randint(
-        low=INT32_MIN,
-        high=INT32_MAX + 1,
-        size=(key.config.dimension,),
-        dtype=np.int32,
-    )
-    noise = np.int32(
-        INT32_MAX * np.random.normal(loc=0.0, scale=key.config.noise_std)
-    )
+    a = utils.uniform_sample_int32(size=key.config.dimension)
+    noise = utils.gaussian_sample_int32(std=key.config.noise_std, size=None)
 
     # b = (a, key) + message + noise
     b = np.add(np.dot(a, key.key), plaintext.message, dtype=np.int32)
@@ -73,6 +75,14 @@ def lwe_decrypt(
 ) -> LwePlaintext:
     return LwePlaintext(
         np.subtract(ciphertext.b, np.dot(ciphertext.a, key.key), dtype=np.int32)
+    )
+
+
+def lwe_trivial_ciphertext(plaintext: LwePlaintext, config: LweConfig):
+    return LweCiphertext(
+        config=config,
+        a=np.zeros(config.dimension, dtype=np.int32),
+        b=plaintext.message,
     )
 
 
