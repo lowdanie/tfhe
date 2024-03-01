@@ -189,6 +189,13 @@ def cmux(
     rlwe_ciphertext_0: rlwe.RlweCiphertext,
     rlwe_ciphertext_1: rlwe.RlweCiphertext,
 ) -> rlwe.RlweCiphertext:
+    """Homomorphically evaluate the multiplexer function.
+
+    Suppose that rlwe_ciphertext_0 is an encryption of l_0 and rlwe_ciphertext_1
+    is an encryption of l_1. If gsw_ciphertext is a GSW encryption of 0, then
+    the output will be an RLWE encryption of l_0. Otherwise, the output will be
+    an RLWE encryption of l_1.
+    """
     return rlwe.rlwe_add(
         gsw_multiply(
             gsw_ciphertext,

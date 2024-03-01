@@ -8,25 +8,27 @@ def nand_gate(
     lwe_ciphertext_right: lwe.LweCiphertext,
     bootstrap_key: bootstrap.BootstrapKey,
 ) -> lwe.LweCiphertext:
-    """The input lwe ciphertext encrypt either encode(0) or encode(2)=2**30"""
-    # Compute an LWE encryption of: encode(-3) - m1 - m2
-    # if m1=encode(2), m2=encode(0):  encode(-3) - encode(2) - encode(0) = encode(-5) = encode(3)
-    # if m1 = m2 = encode(2): encode(-3) - encode(2) - encode(2) = encode(-7) = encode(1)
-    lwe_config = lwe_ciphertext_left.config
+    """Homomorphically evaluate the NAND function.
 
-    # TODO: this could be replaced with a trivial_ciphertext method
-    initial_lwe_ciphertext = lwe.LweCiphertext(
-        config=lwe_config,
-        a=np.zeros(lwe_config.dimension, dtype=np.int32),
-        b=utils.encode(-3),
+    Suppose that lwe_ciphertext_left is an LWE encryption of an encoding of the
+    boolean b_left and lwe_ciphertext_right is an LWE encryption of an encoding
+    of the boolean b_right. Then the the output is an LWE encryption of an encoding
+    of NAND(b_left, b_right).
+    """
+    # Compute an LWE encryption of: encode(-3) - m_left - m_right
+    initial_lwe_ciphertext = lwe.lwe_trivial_ciphertext(
+        plaintext=lwe.LwePlaintext(utils.encode(-3)),
+        config=lwe_ciphertext_left.config
     )
+
     test_lwe_ciphertext = lwe.lwe_subtract(
         initial_lwe_ciphertext, lwe_ciphertext_left
     )
     test_lwe_ciphertext = lwe.lwe_subtract(
         test_lwe_ciphertext, lwe_ciphertext_right
     )
-
+    
+    # Bootstrap the test_lwe_ciphertext to an encoding of True.
     return bootstrap.bootstrap(
-        test_lwe_ciphertext, bootstrap_key, scale=utils.encode(2)
+        test_lwe_ciphertext, bootstrap_key, scale=utils.encode_bool(True)
     )

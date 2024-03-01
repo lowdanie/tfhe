@@ -33,18 +33,22 @@ class LweEncryptionKey:
 
 
 def lwe_encode(i: int) -> LwePlaintext:
+    """Encode an integer in [-4,4) as an LWE plaintext."""
     return LwePlaintext(utils.encode(i))
 
 
 def lwe_decode(plaintext: LwePlaintext) -> int:
+    """Decode an LWE plaintext to an integer in [-4,4) mod 8."""
     return utils.decode(plaintext.message)
 
 
 def lwe_encode_bool(b: bool) -> LwePlaintext:
+    """Encode a boolean as an LWE plaintext."""
     return LwePlaintext(utils.encode_bool(b))
 
 
 def lwe_decode_bool(plaintext: LwePlaintext) -> bool:
+    """Decode an LWE plaintext to a boolean."""
     return utils.decode_bool(plaintext.message)
 
 
@@ -79,6 +83,7 @@ def lwe_decrypt(
 
 
 def lwe_trivial_ciphertext(plaintext: LwePlaintext, config: LweConfig):
+    """Generate a trivial encryption of the plaintext."""
     return LweCiphertext(
         config=config,
         a=np.zeros(config.dimension, dtype=np.int32),
@@ -89,6 +94,7 @@ def lwe_trivial_ciphertext(plaintext: LwePlaintext, config: LweConfig):
 def lwe_add(
     ciphertext_left: LweCiphertext, ciphertext_right: LweCiphertext
 ) -> LweCiphertext:
+    """Homomorphically add two LWE ciphertexts."""
     return LweCiphertext(
         ciphertext_left.config,
         np.add(ciphertext_left.a, ciphertext_right.a, dtype=np.int32),
@@ -99,6 +105,7 @@ def lwe_add(
 def lwe_subtract(
     ciphertext_left: LweCiphertext, ciphertext_right: LweCiphertext
 ) -> LweCiphertext:
+    """Homomorphically subtract two LWE ciphertexts."""
     return LweCiphertext(
         ciphertext_left.config,
         np.subtract(ciphertext_left.a, ciphertext_right.a, dtype=np.int32),
@@ -107,6 +114,7 @@ def lwe_subtract(
 
 
 def lwe_plaintext_multiply(c: int, ciphertext: LweCiphertext) -> LweCiphertext:
+    """Homomorphically multiply an LWE ciphertext with a plaintext integer."""
     return LweCiphertext(
         ciphertext.config,
         np.multiply(c, ciphertext.a, dtype=np.int32),

@@ -32,6 +32,7 @@ class RlweCiphertext:
 
 
 def rlwe_encode(p: Polynomial, config: RlweConfig) -> RlwePlaintext:
+    """Encode a polynomial with coefficients in [-4, 4) as an RLWE plaintext."""
     encode_coeff = np.array([utils.encode(i) for i in p.coeff])
     return RlwePlaintext(
         config=config, message=polynomial.Polynomial(N=p.N, coeff=encode_coeff)
@@ -39,11 +40,13 @@ def rlwe_encode(p: Polynomial, config: RlweConfig) -> RlwePlaintext:
 
 
 def rlwe_decode(plaintext: RlwePlaintext) -> Polynomial:
+    """Decode an RLWE plaintext to a polynomial with coefficients in [-4, 4) mod 8."""
     decode_coeff = np.array([utils.decode(i) for i in plaintext.message.coeff])
     return Polynomial(N=plaintext.message.N, coeff=decode_coeff)
 
 
 def build_zero_rlwe_plaintext(config: RlweConfig) -> RlwePlaintext:
+    """Build a an RLWE plaintext containing the zero polynomial."""
     return RlwePlaintext(
         config=config, message=polynomial.zero_polynomial(config.degree)
     )
@@ -52,6 +55,7 @@ def build_zero_rlwe_plaintext(config: RlweConfig) -> RlwePlaintext:
 def build_monomial_rlwe_plaintext(
     c: int, i: int, config: RlweConfig
 ) -> RlwePlaintext:
+    """Build an RLWE plaintext containing the monomial c*x^i"""
     return RlwePlaintext(
         config=config, message=polynomial.build_monomial(c, i, config.degree)
     )
@@ -110,9 +114,26 @@ def rlwe_decrypt(
     return RlwePlaintext(config=key.config, message=message)
 
 
+def rlwe_trivial_ciphertext(
+    f: Polynomial, config: RlweConfig
+) -> RlweCiphertext:
+    """Generate a trivial encryption of the plaintext."""
+    if f.N != config.degree:
+        raise ValueError(
+            f"The degree of f ({f.N}) does not match the config degree ({config.degree}) "
+        )
+
+    return RlweCiphertext(
+        config=config,
+        a=polynomial.zero_polynomial(config.degree),
+        b=f,
+    )
+
+
 def rlwe_add(
     ciphertext_left: RlweCiphertext, ciphertext_right: RlweCiphertext
 ) -> RlweCiphertext:
+    """Homomorphically add two RLWE ciphertexts."""
     return RlweCiphertext(
         ciphertext_left.config,
         polynomial.polynomial_add(ciphertext_left.a, ciphertext_right.a),
@@ -123,6 +144,7 @@ def rlwe_add(
 def rlwe_subtract(
     ciphertext_left: RlweCiphertext, ciphertext_right: RlweCiphertext
 ) -> RlweCiphertext:
+    """Homomorphically subtract two RLWE ciphertexts."""
     return RlweCiphertext(
         ciphertext_left.config,
         polynomial.polynomial_subtract(ciphertext_left.a, ciphertext_right.a),
@@ -133,23 +155,9 @@ def rlwe_subtract(
 def rlwe_plaintext_multiply(
     c: RlwePlaintext, ciphertext: RlweCiphertext
 ) -> RlweCiphertext:
+    """Homomorphically multiply an RLWE ciphertext by a plaintext polynomial."""
     return RlweCiphertext(
         ciphertext.config,
         polynomial.polynomial_multiply(c.message, ciphertext.a),
         polynomial.polynomial_multiply(c.message, ciphertext.b),
-    )
-
-
-def rlwe_trivial_ciphertext(
-    f: Polynomial, config: RlweConfig
-) -> RlweCiphertext:
-    if f.N != config.degree:
-        raise ValueError(
-            f"The degree of f ({f.N}) does not match the config degree ({config.degree}) "
-        )
-
-    return RlweCiphertext(
-        config=config,
-        a=polynomial.zero_polynomial(config.degree),
-        b=f,
     )
