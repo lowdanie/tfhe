@@ -103,12 +103,12 @@ def bootstrap(
     bootstrap_key: BootstrapKey,
     scale: np.int32,
 ) -> lwe.LweCiphertext:
-    """Homomorphically evaluate the function Step(i) = scale if |i|>2**29 else 0
-    
-    Suppose that lwe_ciphertext is an encryption of the int32 i. If |i| > 2**29
-    then return an LWE encryption of the scale argument. Otherwise return an LWE
-    encryption of 0. In both cases the ciphertext noise will be bounded and
-    independent of the lwe_ciphertext noise.
+    """Bootstrap the LWE ciphertext.
+
+    Suppose that lwe_ciphertext is an encryption of the int32 i.
+    If -2^30 < i <= 2^30 then return an LWE encryption of the scale argument.
+    Otherwise return an LWE encryption of 0. In both cases the ciphertext noise
+    will be bounded and independent of the lwe_ciphertext noise.
     """
     N = bootstrap_key.config.rlwe_config.degree
     test_polynomial = polynomial.polynomial_constant_multiply(

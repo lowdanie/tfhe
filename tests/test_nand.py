@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from tfhe import bootstrap, config, gsw, lwe, nand, utils
+from tfhe import bootstrap, config, gsw, lwe, nand
 
 
 class TestNand(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestNand(unittest.TestCase):
         ciphertext_0 = lwe.lwe_encrypt(plaintext_0, lwe_key)
         ciphertext_1 = lwe.lwe_encrypt(plaintext_1, lwe_key)
 
-        ciphertext_nand = nand.nand_gate(
+        ciphertext_nand = nand.lwe_nand(
             ciphertext_0, ciphertext_1, bootstrap_key
         )
         plaintext_nand = lwe.lwe_decrypt(ciphertext_nand, lwe_key)

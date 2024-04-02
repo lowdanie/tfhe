@@ -4,6 +4,8 @@ import dataclasses
 
 @dataclasses.dataclass
 class Polynomial:
+    """A polynomial in the ring Z_q[x] / (x^N + 1)"""
+
     N: int
     coeff: np.ndarray
 
@@ -13,6 +15,13 @@ def polynomial_constant_multiply(c: int, p: Polynomial) -> Polynomial:
 
 
 def polynomial_multiply(p1: Polynomial, p2: Polynomial) -> Polynomial:
+    """Multiply two negacyclic polynomials.
+
+    Note that this is not an optimal implementation.
+    See
+    https://www.jeremykun.com/2022/12/09/negacyclic-polynomial-multiplication/
+    for a more efficient version which uses FFTs.
+    """
     N = p1.N
 
     # Multiply and pad the result to have length 2N-1

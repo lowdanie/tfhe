@@ -1,9 +1,9 @@
 import numpy as np
 
-from tfhe import bootstrap, lwe, utils
+from tfhe import bootstrap, lwe
 
 
-def nand_gate(
+def lwe_nand(
     lwe_ciphertext_left: lwe.LweCiphertext,
     lwe_ciphertext_right: lwe.LweCiphertext,
     bootstrap_key: bootstrap.BootstrapKey,
@@ -17,8 +17,8 @@ def nand_gate(
     """
     # Compute an LWE encryption of: encode(-3) - m_left - m_right
     initial_lwe_ciphertext = lwe.lwe_trivial_ciphertext(
-        plaintext=lwe.LwePlaintext(utils.encode(-3)),
-        config=lwe_ciphertext_left.config
+        plaintext=lwe.lwe_encode(-3),
+        config=lwe_ciphertext_left.config,
     )
 
     test_lwe_ciphertext = lwe.lwe_subtract(
@@ -27,7 +27,7 @@ def nand_gate(
     test_lwe_ciphertext = lwe.lwe_subtract(
         test_lwe_ciphertext, lwe_ciphertext_right
     )
-    
+
     # Bootstrap the test_lwe_ciphertext to an encoding of True.
     return bootstrap.bootstrap(
         test_lwe_ciphertext, bootstrap_key, scale=utils.encode_bool(True)

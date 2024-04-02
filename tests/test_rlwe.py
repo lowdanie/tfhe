@@ -129,7 +129,7 @@ class TestRlwe(unittest.TestCase):
             polynomial.polynomial_add(p_0, p_1),
         )
 
-    def test_add(self):
+    def test_subtract(self):
         key = rlwe.generate_rlwe_key(config.RLWE_CONFIG)
 
         p_0 = polynomial.build_monomial(c=1, i=0, N=config.RLWE_CONFIG.degree)
