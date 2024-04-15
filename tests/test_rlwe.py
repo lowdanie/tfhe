@@ -168,6 +168,37 @@ class TestRlwe(unittest.TestCase):
             polynomial.polynomial_multiply(p_0, p_1),
         )
 
+    def test_plaintext_multiply_2(self):
+        key = rlwe.generate_rlwe_key(config.RLWE_CONFIG)
+
+        # c(x) = x, m(x) = 2x^2
+        c = polynomial.build_monomial(1, 1, N=config.RLWE_CONFIG.degree)
+        m = polynomial.build_monomial(2, 2, N=config.RLWE_CONFIG.degree)
+
+        # Convert c(x) into an RLWE plaintext without encoding. Note that encoding is
+        # not necessary since c(x) will not be encrypted.
+        c_plaintext = rlwe.RlwePlaintext(config=config.RLWE_CONFIG, message=c)
+
+        # Encode m(x) as an RLWE plaintext.
+        m_plaintext = rlwe.rlwe_encode(m, config)
+
+        # Encrypt m(x)
+        m_ciphertext = rlwe.rlwe_encrypt(m_plaintext, key)
+
+        # Homomorphically multiply the encryption of m(x) with c(x)
+        cm_ciphertext = rlwe.rlwe_plaintext_multiply(c_plaintext, m_ciphertext)
+
+        # Decrypt the product.
+        cm_decrypted = rlwe.rlwe_decrypt(cm_ciphertext, key)
+
+        # Decode the result.
+        cm_decoded = rlwe.rlwe_decode(cm_decrypted)
+
+        # The decoded result should be equal to c(x)*m(x) = 2x^3
+        self.assert_polynomial_equal(
+            cm_decoded, polynomial.polynomial_multiply(c, m)
+        )
+
     def test_rlwe_trivial_ciphertext(self):
         key = rlwe.generate_rlwe_key(config.RLWE_CONFIG)
 
