@@ -1,6 +1,6 @@
 import numpy as np
 
-from tfhe import bootstrap, lwe
+from tfhe import bootstrap, lwe, utils
 
 
 def lwe_nand(
