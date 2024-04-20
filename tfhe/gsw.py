@@ -140,7 +140,7 @@ def gsw_encrypt(
             rlwe_ciphertexts[i].a, scaled_message
         )
 
-        b_idx = i + num_powers  # num_levels
+        b_idx = i + num_powers
         rlwe_ciphertexts[b_idx].b = polynomial.polynomial_add(
             rlwe_ciphertexts[b_idx].b, scaled_message
         )

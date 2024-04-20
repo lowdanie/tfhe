@@ -61,7 +61,7 @@ def build_monomial_rlwe_plaintext(
     )
 
 
-def generate_rlwe_key(config: RlweConfig) -> np.ndarray:
+def generate_rlwe_key(config: RlweConfig) -> RlweEncryptionKey:
     return RlweEncryptionKey(
         config=config,
         key=Polynomial(
